@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lumière">
+<meta name="theme-color" content="#0f0f0f">
+<title>Lumière · نور</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f; --bg2: #181818; --bg3: #222; --bg4: #2a2a2a;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --text: #f0ede8; --text2: rgba(240,237,232,0.55); --text3: rgba(240,237,232,0.3);
+  --fr: #c9a96e; --ar: #7ec8a4; --ru: #a89fd4; --en: #7ab8d4; --es: #d4947a;
+  --accent: #e8d5b0;
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+.screen{position:absolute;inset:0;overflow-y:auto;display:none;flex-direction:column;padding-bottom:calc(68px + var(--safe-bottom))}
+.screen.active{display:flex}
+.topbar{position:sticky;top:0;z-index:10;padding:calc(var(--safe-top) + 14px) 20px 14px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border)}
+.app-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:300;letter-spacing:0.03em;color:var(--accent)}
+.app-title span{color:var(--ar)}
+.topbar-sub{font-size:11px;color:var(--text3);text-align:right;line-height:1.4}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg2);border-top:0.5px solid var(--border);display:flex;padding-bottom:var(--safe-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;background:none;border:none;color:var(--text3);cursor:pointer;transition:color 0.2s;font-family:'DM Sans',sans-serif}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn span{font-size:10px;letter-spacing:0.04em}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 16px 12px}
+.stat-c{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--accent);line-height:1}
+.stat-l{font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:0.04em}
+
+/* TABS */
+.tab-row{display:flex;gap:0;margin:0 16px 14px;border:0.5px solid var(--border);border-radius:10px;overflow:hidden}
+.tab-btn{flex:1;padding:9px 4px;background:none;border:none;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s}
+.tab-btn.active{background:var(--bg2);color:var(--text)}
+.tab-btn+.tab-btn{border-left:0.5px solid var(--border)}
+
+/* CARDS */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:16px 18px;margin:0 16px 10px}
+.card-head{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+.b-fr{background:rgba(201,169,110,.15);color:var(--fr)}
+.b-ar{background:rgba(126,200,164,.15);color:var(--ar)}
+.b-ru{background:rgba(168,159,212,.15);color:var(--ru)}
+.b-en{background:rgba(122,184,212,.15);color:var(--en)}
+.b-es{background:rgba(212,148,122,.15);color:var(--es)}
+.b-both{background:rgba(232,213,176,.08);color:var(--accent)}
+.time-tag{font-size:11px;color:var(--text3);margin-left:auto}
+.card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:5px}
+.card-body{font-size:13px;color:var(--text2);line-height:1.65}
+
+/* PROGRESS */
+.prog-wrap{margin:0 16px 12px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px}
+.prog-track{height:3px;background:var(--bg3);border-radius:2px}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.5s cubic-bezier(.4,0,.2,1)}
+
+/* CHECK BTN */
+.check-btn{width:calc(100% - 40px);margin:4px 20px 8px;padding:13px;background:transparent;border:0.5px solid var(--border2);border-radius:12px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;letter-spacing:.02em}
+.check-btn:active{transform:scale(.98)}
+.check-btn.done{background:rgba(126,200,164,.1);border-color:var(--ar);color:var(--ar)}
+
+/* ─── WORD CARD (5 idiomas) ─── */
+.wcard{background:var(--bg2);border:0.5px solid var(--border);border-radius:18px;margin:0 16px 10px;overflow:hidden}
+.wcard-hero{padding:22px 20px 18px}
+.wcard-langs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.lang-tile{background:var(--bg3);border-radius:12px;padding:12px 14px;border:0.5px solid var(--border)}
+.lang-tile.full{grid-column:1/-1}
+.lt-label{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.lt-word{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;line-height:1.1}
+.lt-roman{font-size:11px;color:var(--text3);font-style:italic;margin-top:2px}
+.lt-es{font-size:12px;color:var(--text2);margin-top:3px}
+.lt-tip{font-size:11px;color:var(--text3);margin-top:6px;font-style:italic}
+.word-fr-big{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:var(--fr);line-height:1}
+.word-ar-big{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;color:var(--ar);line-height:1;direction:rtl}
+.word-pron{font-size:13px;color:var(--text3);font-style:italic;margin-top:3px}
+.word-es{font-size:14px;color:var(--text2);margin-top:5px}
+
+/* PHONETICS */
+.phon-section{padding:0 16px 14px}
+.phon-title{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.phon-block{background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.phon-sil-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.sil-pill{background:var(--bg4);border:0.5px solid var(--border2);border-radius:8px;padding:4px 10px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400}
+.sil-pill.fr{color:var(--fr)}
+.sil-pill.ar{color:var(--ar);direction:rtl}
+.phon-note{font-size:12px;color:var(--text2);line-height:1.55;padding:4px 0 4px 10px;border-left:1.5px solid var(--border2)}
+.phon-note+.phon-note{margin-top:4px}
+
+/* CONNECTIONS */
+.conn-section{padding:0 16px 16px}
+.conn-title{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.conn-card{background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:7px;border-left:2px solid var(--border2)}
+.conn-tipo{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.conn-text{font-size:13px;color:var(--text2);line-height:1.6}
+.conn-memoria{background:rgba(201,169,110,.08);border-color:var(--fr)}
+.conn-memoria .conn-tipo{color:var(--fr)}
+.tipo-etim{border-color:rgba(122,184,212,.4)}.tipo-etim .conn-tipo{color:var(--en)}
+.tipo-fon{border-color:rgba(168,159,212,.4)}.tipo-fon .conn-tipo{color:var(--ru)}
+.tipo-sem{border-color:rgba(126,200,164,.4)}.tipo-sem .conn-tipo{color:var(--ar)}
+.tipo-gen{border-color:var(--border2)}.tipo-gen .conn-tipo{color:var(--text3)}
+
+/* WEEK / LESSONS */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin:0 16px 10px}
+.week-arrow{background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 14px;cursor:pointer;font-size:18px}
+.week-info{font-size:13px;color:var(--text2);text-align:center}
+.week-tema{font-size:11px;color:var(--text3)}
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:0 16px 14px}
+.day-pill{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);color:var(--text3);transition:all .15s;background:none}
+.day-pill.today{border-color:var(--fr);color:var(--fr)}
+.day-pill.done{background:rgba(126,200,164,.15);border-color:var(--ar);color:var(--ar)}
+.day-pill.selected{background:var(--bg2);color:var(--text);border-color:var(--border2)}
+
+/* PROGRESS SCREEN */
+.section-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin:18px 20px 10px}
+.logro-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:12px 16px;margin:0 16px 8px;display:flex;align-items:center;gap:12px}
+.logro-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+/* CONFIG */
+.notif-card{margin:14px 16px 0;background:var(--bg2);border:0.5px solid rgba(201,169,110,.2);border-radius:16px;padding:18px}
+.notif-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--fr);margin-bottom:7px}
+.notif-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.notif-times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.time-wrap{display:flex;flex-direction:column;gap:4px}
+.time-lbl{font-size:10px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+.time-in{background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 6px;width:100%;text-align:center}
+.primary-btn{width:100%;padding:13px;background:var(--fr);color:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:none;border-radius:10px;cursor:pointer;letter-spacing:.02em;transition:opacity .2s}
+.primary-btn:active{opacity:.85}
+
+/* INSTALL */
+.install-banner{margin:10px 16px 0;background:rgba(201,169,110,.07);border:0.5px solid rgba(201,169,110,.18);border-radius:14px;padding:13px 15px;display:none}
+.install-banner.visible{display:block}
+.install-text{font-size:13px;color:var(--text2);margin-bottom:9px;line-height:1.5}
+.install-btn{width:100%;padding:9px;background:transparent;border:0.5px solid var(--fr);border-radius:8px;color:var(--fr);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;top:calc(var(--safe-top) + 68px);left:50%;transform:translateX(-50%) translateY(-16px);background:var(--bg3);border:0.5px solid var(--border2);border-radius:10px;padding:9px 16px;font-size:12px;color:var(--text);z-index:999;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+::-webkit-scrollbar{width:0}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- HOY -->
+<div class="screen active" id="screen-hoy">
+  <div class="topbar">
+    <div class="app-title">Lumière · <span>نور</span></div>
+    <div class="topbar-sub" id="fecha-hoy"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-c"><div class="stat-n" id="s-streak">0</div><div class="stat-l">racha</div></div>
+    <div class="stat-c"><div class="stat-n" id="s-fr">0</div><div class="stat-l">palabras FR</div></div>
+    <div class="stat-c"><div class="stat-n" id="s-ar">0</div><div class="stat-l">palabras AR</div></div>
+  </div>
+
+  <div class="install-banner" id="install-banner">
+    <div class="install-text">Instala Lumière para acceso rápido y uso 100% offline.</div>
+    <button class="install-btn" id="install-btn">Instalar en pantalla de inicio</button>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showMomento('manana')">Mañana</button>
+    <button class="tab-btn" onclick="showMomento('tarde')">Tarde</button>
+    <button class="tab-btn" onclick="showMomento('noche')">Noche</button>
+  </div>
+
+  <!-- MAÑANA -->
+  <div id="momento-manana">
+    <div class="prog-wrap">
+      <div class="prog-lbl"><span>mañana</span><span id="pg-m-l">pendiente</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pg-m" style="width:0%"></div></div>
+    </div>
+
+    <!-- FICHA COMPLETA -->
+    <div class="wcard" id="wcard-main">
+      <div class="wcard-hero">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div class="word-fr-big" id="wd-fr"></div>
+            <div class="word-pron" id="wd-fr-pron"></div>
+            <div class="word-es" id="wd-es-main"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="word-ar-big" id="wd-ar"></div>
+            <div class="word-pron" style="text-align:right" id="wd-ar-roman"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);font-style:italic;border-left:2px solid var(--border2);padding-left:10px" id="wd-tip"></div>
+      </div>
+
+      <!-- 5 IDIOMAS -->
+      <div class="wcard-langs">
+        <div class="lang-tile">
+          <div class="lt-label" style="color:var(--es)">Español</div>
+          <div class="lt-word" style="color:var(--es)" id="lt-es"></div>
+        </div>
+        <div class="lang-tile">
+          <div class="lt-label" style="color:var(--en)">English</div>
+          <div class="lt-word" style="color:var(--en)" id="lt-en"></div>
+        </div>
+        <div class="lang-tile full">
+          <div class="lt-label" style="color:var(--ru)">Русский</div>
+          <div class="lt-word" style="color:var(--ru)" id="lt-ru-word"></div>
+          <div class="lt-roman" id="lt-ru-roman"></div>
+          <div class="lt-tip" id="lt-ru-tip"></div>
+        </div>
+      </div>
+
+      <!-- PRONUNCIACIÓN FR -->
+      <div class="phon-section">
+        <div class="phon-title">Pronunciación — Français</div>
+        <div class="phon-block">
+          <div class="phon-sil-row" id="ph-fr-sil"></div>
+          <div id="ph-fr-notes"></div>
+        </div>
+      </div>
+
+      <!-- PRONUNCIACIÓN AR -->
+      <div class="phon-section" style="padding-top:0">
+        <div class="phon-title">Pronunciación — العربية</div>
+        <div class="phon-block">
+          <div class="phon-sil-row" id="ph-ar-sil"></div>
+          <div id="ph-ar-notes"></div>
+        </div>
+      </div>
+
+      <!-- CONEXIONES -->
+      <div class="conn-section">
+        <div class="conn-title">Conexiones fonéticas & etimológicas</div>
+        <div id="conn-list"></div>
+        <div class="conn-card conn-memoria">
+          <div class="conn-tipo">truco mnemotécnico</div>
+          <div class="conn-text" id="conn-memoria"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <div class="card-head"><span class="badge b-ar">Árabe</span><span class="time-tag">con el café · 2 min</span></div>
+      <div class="card-title">Escríbelo a mano</div>
+      <div class="card-body">Copia la palabra árabe una vez en tu libreta. La memoria motriz fija el vocabulario de forma diferente a la visual.</div>
+    </div>
+
+    <button class="check-btn" id="btn-m" onclick="check('m')">Marcar mañana como lista</button>
+  </div>
+
+  <!-- TARDE -->
+  <div id="momento-tarde" style="display:none">
+    <div class="prog-wrap">
+      <div class="prog-lbl"><span>tarde</span><span id="pg-t-l">pendiente</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pg-t" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="badge b-fr">Francés</span><span class="time-tag">al escribir · pasivo</span></div>
+      <div class="card-title">Usa la palabra en tu trabajo</div>
+      <div class="card-body">Intenta usar <strong id="wd-fr-tarde" style="color:var(--fr)"></strong> en un borrador para Fonoma, Teloa o el Ballet. Si no encaja, escribe una oración sobre lo que estás haciendo ahora.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="badge b-both">FR + AR</span><span class="time-tag">pausa · 5 min</span></div>
+      <div class="card-title">Micro-inmersión auditiva</div>
+      <div class="card-body">Un día francés, el siguiente árabe. Pon algo de fondo mientras comes o caminas — el oído se entrena sin esfuerzo consciente.<br><br><span style="color:var(--text3);font-size:12px">FR: RFI en français · TV5Monde<br>AR: Al Jazeera العربية · Arabic with Sam</span></div>
+    </div>
+    <button class="check-btn" id="btn-t" onclick="check('t')">Marcar tarde como lista</button>
+  </div>
+
+  <!-- NOCHE -->
+  <div id="momento-noche" style="display:none">
+    <div class="prog-wrap">
+      <div class="prog-lbl"><span>noche</span><span id="pg-n-l">pendiente</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pg-n" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="badge b-fr">Francés</span><span class="time-tag">cena · 3 min</span></div>
+      <div class="card-title">Una oración sobre tu día</div>
+      <div class="card-body">Di (o escribe) una oración en francés sobre algo que viviste hoy, usando <em id="wd-fr-noche" style="color:var(--fr)"></em>. No tiene que ser perfecta — solo real.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="badge b-ar">Árabe</span><span class="time-tag">antes de dormir · 2 min</span></div>
+      <div class="card-title">Repaso visual</div>
+      <div class="card-body">Mira <strong id="wd-ar-noche" style="color:var(--ar);direction:rtl;display:inline-block"></strong> una vez más. Cierra los ojos, visualiza la escritura. El sueño consolida el vocabulario — este paso es neurológicamente real.</div>
+    </div>
+    <button class="check-btn" id="btn-n" onclick="check('n')">Marcar noche como lista</button>
+  </div>
+</div>
+
+<!-- LECCIONES -->
+<div class="screen" id="screen-lecciones">
+  <div class="topbar"><div class="app-title">Lecciones</div><div class="topbar-sub" id="wk-sub"></div></div>
+  <div style="height:14px"></div>
+  <div class="week-nav">
+    <button class="week-arrow" onclick="changeWeek(-1)">‹</button>
+    <div style="text-align:center">
+      <div class="week-info" id="wk-title"></div>
+      <div class="week-tema" id="wk-tema"></div>
+    </div>
+    <button class="week-arrow" onclick="changeWeek(1)">›</button>
+  </div>
+  <div class="day-grid" id="day-grid"></div>
+  <div id="lesson-detail"></div>
+</div>
+
+<!-- PROGRESO -->
+<div class="screen" id="screen-progreso">
+  <div class="topbar"><div class="app-title">Mi progreso</div></div>
+  <div style="height:14px"></div>
+  <div class="stats-row">
+    <div class="stat-c"><div class="stat-n" id="p-streak">0</div><div class="stat-l">racha días</div></div>
+    <div class="stat-c"><div class="stat-n" id="p-total">0</div><div class="stat-l">días totales</div></div>
+    <div class="stat-c"><div class="stat-n" id="p-words">0</div><div class="stat-l">palabras</div></div>
+  </div>
+  <div class="section-title">Últimos 28 días</div>
+  <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:0 16px 16px"></div>
+  <div class="section-title">Logros</div>
+  <div id="logros-list"></div>
+</div>
+
+<!-- CONFIG -->
+<div class="screen" id="screen-config">
+  <div class="topbar"><div class="app-title">Ajustes</div></div>
+  <div style="height:14px"></div>
+  <div class="notif-card">
+    <div class="notif-title">Recordatorios</div>
+    <div class="notif-body">Configura los tres momentos del día. La app te avisará aunque esté cerrada (en Android; en iOS funciona al abrir).</div>
+    <div class="notif-times">
+      <div class="time-wrap"><div class="time-lbl">Mañana</div><input type="time" class="time-in" id="time-m" value="07:30"></div>
+      <div class="time-wrap"><div class="time-lbl">Tarde</div><input type="time" class="time-in" id="time-t" value="13:00"></div>
+      <div class="time-wrap"><div class="time-lbl">Noche</div><input type="time" class="time-in" id="time-n" value="21:30"></div>
+    </div>
+    <button class="primary-btn" onclick="setupNotifications()">Activar notificaciones</button>
+  </div>
+  <div class="section-title">Sobre la app</div>
+  <div class="card">
+    <div class="card-body" style="line-height:1.9">
+      28 días · 4 semanas temáticas · 5 idiomas<br>
+      Semana 1: Comunicación &amp; trabajo<br>
+      Semana 2: Música &amp; arte<br>
+      Semana 3: Ciudad &amp; vida cotidiana<br>
+      Semana 4: Pensamiento &amp; comunicación<br>
+      <br>
+      <span style="color:var(--text3)">100% offline. Tus datos nunca salen del dispositivo.</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:8px">Reiniciar progreso</div>
+    <button class="check-btn" style="margin:0;width:100%" onclick="resetAll()">Borrar todos los datos</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showScreen('hoy',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <span>Hoy</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('lecciones',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span>Lecciones</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('progreso',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Progreso</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('config',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<script src="lessons.js"></script>
+<script>
+// ── STORAGE ────────────────────────────────────────────
+const S={
+  get:k=>{try{return JSON.parse(localStorage.getItem('lm_'+k))}catch{return null}},
+  set:(k,v)=>localStorage.setItem('lm_'+k,JSON.stringify(v))
+};
+function getState(){return S.get('state')||{streak:0,totalDays:0,wordsFr:0,wordsAr:0,history:{},notifTimes:{m:'07:30',t:'13:00',n:'21:30'}}}
+function saveState(st){S.set('state',st)}
+function todayKey(){return new Date().toISOString().split('T')[0]}
+function getDayIndex(){
+  const st=getState();const days=Object.keys(st.history).sort();
+  if(!days.length)return 0;
+  return Math.floor((new Date(todayKey())-new Date(days[0]))/86400000);
+}
+function getLessonForDay(idx){
+  const wi=Math.floor(idx/7)%LESSONS.length;const di=idx%7;
+  return{lesson:LESSONS[wi].dias[di],week:LESSONS[wi],wi,di};
+}
+
+// ── INIT ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  const st=getState();
+  document.getElementById('time-m').value=st.notifTimes?.m||'07:30';
+  document.getElementById('time-t').value=st.notifTimes?.t||'13:00';
+  document.getElementById('time-n').value=st.notifTimes?.n||'21:30';
+  renderFecha();renderHoy();renderStats();
+  setupWeekView(0);renderProgreso();
+  registerSW();setupInstallPrompt();
+});
+
+function renderFecha(){
+  const d=new Date();
+  document.getElementById('fecha-hoy').textContent=d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+}
+
+// ── RENDER HOY ─────────────────────────────────────────
+function renderHoy(){
+  const idx=getDayIndex();
+  const{lesson:l}=getLessonForDay(idx);
+  // Hero
+  document.getElementById('wd-fr').textContent=l.fr.word;
+  document.getElementById('wd-fr-pron').textContent=l.fr.pron;
+  document.getElementById('wd-es-main').textContent=l.es;
+  document.getElementById('wd-ar').textContent=l.ar.word;
+  document.getElementById('wd-ar-roman').textContent=l.ar.roman;
+  document.getElementById('wd-tip').textContent=l.tip;
+  // 5 idiomas
+  document.getElementById('lt-es').textContent=l.es;
+  document.getElementById('lt-en').textContent=l.en;
+  document.getElementById('lt-ru-word').textContent=l.ru.word;
+  document.getElementById('lt-ru-roman').textContent=l.ru.roman;
+  document.getElementById('lt-ru-tip').textContent=l.ru.tip;
+  // Tarde/noche refs
+  document.getElementById('wd-fr-tarde').textContent=l.fr.word;
+  document.getElementById('wd-fr-noche').textContent=l.fr.word;
+  document.getElementById('wd-ar-noche').textContent=l.ar.word;
+  // Phonetics FR
+  const frSil=document.getElementById('ph-fr-sil');
+  frSil.innerHTML=l.fr.silabas.map(s=>`<span class="sil-pill fr">${s}</span>`).join('');
+  document.getElementById('ph-fr-notes').innerHTML=l.fr.notas.map(n=>`<div class="phon-note">${n}</div>`).join('');
+  // Phonetics AR
+  const arSil=document.getElementById('ph-ar-sil');
+  arSil.innerHTML=l.ar.silabas.map(s=>`<span class="sil-pill ar">${s}</span>`).join('');
+  document.getElementById('ph-ar-notes').innerHTML=l.ar.notas.map(n=>`<div class="phon-note">${n}</div>`).join('');
+  // Connections
+  const typeMap={
+    'etimología':'tipo-etim','fonética':'tipo-fon','familia semítica':'tipo-sem',
+    'árabe':'tipo-sem','árabe clásico':'tipo-sem','árabe moderno':'tipo-sem',
+    'semántica árabe':'tipo-sem','fonética SH':'tipo-fon','dos metáforas':'tipo-fon',
+    'tres metáforas':'tipo-fon','metáfora árabe':'tipo-sem','familia global':'tipo-etim',
+    'global':'tipo-etim','viaje lingüístico':'tipo-etim','préstamo viajero':'tipo-etim',
+    'digital':'tipo-gen','Ballet':'tipo-gen','76.7':'tipo-gen','Patricia':'tipo-gen',
+    'La Mina':'tipo-gen','clave cubana':'tipo-gen','andalusí':'tipo-gen',
+    'italian musical':'tipo-etim','italiano musical':'tipo-etim'
+  };
+  document.getElementById('conn-list').innerHTML=l.conexiones.map(c=>{
+    const cls=typeMap[c.tipo]||'tipo-gen';
+    return`<div class="conn-card ${cls}"><div class="conn-tipo">${c.tipo}</div><div class="conn-text">${c.texto}</div></div>`;
+  }).join('');
+  document.getElementById('conn-memoria').textContent=l.memoria;
+  // Done state
+  const tk=todayKey();const st=getState();const td=st.history[tk]||{};
+  ['m','t','n'].forEach(k=>{
+    if(td[k]){const b=document.getElementById('btn-'+k);b.classList.add('done');
+      b.textContent={m:'✓ Mañana lista',t:'✓ Tarde lista',n:'✓ Noche lista'}[k];}
+  });
+  updateProgress(td);
+}
+
+function renderStats(){
+  const st=getState();
+  document.getElementById('s-streak').textContent=st.streak;
+  document.getElementById('s-fr').textContent=st.wordsFr;
+  document.getElementById('s-ar').textContent=st.wordsAr;
+}
+
+// ── CHECK ──────────────────────────────────────────────
+function check(part){
+  const btn=document.getElementById('btn-'+part);
+  if(btn.classList.contains('done'))return;
+  btn.classList.add('done');
+  btn.textContent={m:'✓ Mañana lista',t:'✓ Tarde lista',n:'✓ Noche lista'}[part];
+  const st=getState();const tk=todayKey();
+  if(!st.history[tk])st.history[tk]={};
+  st.history[tk][part]=true;
+  const td=st.history[tk];
+  const done=['m','t','n'].filter(p=>td[p]).length;
+  if(done===1){st.wordsFr++;st.wordsAr++;}
+  if(done===3){st.totalDays++;updateStreak(st,tk);toast('¡Día completo! ★');}
+  saveState(st);renderStats();updateProgress(td);renderProgreso();
+}
+function updateStreak(st,tk){
+  const yest=new Date(new Date(tk)-86400000).toISOString().split('T')[0];
+  const y=st.history[yest];
+  st.streak=(y&&['m','t','n'].every(p=>y[p]))?st.streak+1:1;
+}
+function updateProgress(td){
+  ['m','t','n'].forEach(p=>{
+    const done=td&&td[p];
+    document.getElementById('pg-'+p).style.width=done?'100%':'0%';
+    document.getElementById('pg-'+p+'-l').textContent=done?'✓':'pendiente';
+  });
+}
+
+// ── TABS / SCREENS ─────────────────────────────────────
+function showMomento(m){
+  ['manana','tarde','noche'].forEach(x=>document.getElementById('momento-'+x).style.display='none');
+  document.getElementById('momento-'+m).style.display='block';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['manana','tarde','noche'][i]===m);
+  });
+}
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(name==='lecciones')renderWeekLessons();
+  if(name==='progreso')renderProgreso();
+}
+
+// ── LESSONS ───────────────────────────────────────────
+let curWeek=0;
+function changeWeek(d){curWeek=Math.max(0,Math.min(LESSONS.length-1,curWeek+d));setupWeekView(curWeek);renderLessonDetail(curWeek,0);}
+function setupWeekView(wi){
+  const w=LESSONS[wi%LESSONS.length];
+  document.getElementById('wk-title').textContent=`Semana ${wi+1}`;
+  document.getElementById('wk-tema').textContent=w.tema;
+  if(document.getElementById('wk-sub'))document.getElementById('wk-sub').textContent=w.tema;
+  const grid=document.getElementById('day-grid');grid.innerHTML='';
+  const dias=['L','M','X','J','V','S','D'];
+  w.dias.forEach((_,i)=>{
+    const p=document.createElement('button');p.className='day-pill'+(i===0?' selected':'');
+    p.textContent=dias[i];p.dataset.idx=i;
+    p.onclick=()=>{document.querySelectorAll('.day-pill').forEach(x=>x.classList.remove('selected'));
+      p.classList.add('selected');renderLessonDetail(wi,i);};
+    grid.appendChild(p);
+  });
+  renderLessonDetail(wi,0);
+}
+function renderWeekLessons(){setupWeekView(curWeek);}
+function renderLessonDetail(wi,di){
+  const l=LESSONS[wi%LESSONS.length].dias[di];
+  const typeMap={'etimología':'tipo-etim','fonética':'tipo-fon','familia semítica':'tipo-sem','árabe':'tipo-sem','árabe clásico':'tipo-sem','semántica árabe':'tipo-sem','fonética SH':'tipo-fon'};
+  document.getElementById('lesson-detail').innerHTML=`
+    <div class="wcard">
+      <div class="wcard-hero">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+          <div><div class="word-fr-big">${l.fr.word}</div><div class="word-pron">${l.fr.pron}</div><div class="word-es">${l.es}</div></div>
+          <div style="text-align:right"><div class="word-ar-big">${l.ar.word}</div><div class="word-pron" style="text-align:right">${l.ar.roman}</div></div>
+        </div>
+      </div>
+      <div class="wcard-langs">
+        <div class="lang-tile"><div class="lt-label" style="color:var(--es)">Español</div><div class="lt-word" style="color:var(--es)">${l.es}</div></div>
+        <div class="lang-tile"><div class="lt-label" style="color:var(--en)">English</div><div class="lt-word" style="color:var(--en)">${l.en}</div></div>
+        <div class="lang-tile full"><div class="lt-label" style="color:var(--ru)">Русский</div><div class="lt-word" style="color:var(--ru)">${l.ru.word}</div><div class="lt-roman">${l.ru.roman}</div><div class="lt-tip">${l.ru.tip}</div></div>
+      </div>
+      <div class="phon-section">
+        <div class="phon-title">Pronunciación — Français</div>
+        <div class="phon-block">
+          <div class="phon-sil-row">${l.fr.silabas.map(s=>`<span class="sil-pill fr">${s}</span>`).join('')}</div>
+          ${l.fr.notas.map(n=>`<div class="phon-note">${n}</div>`).join('')}
+        </div>
+      </div>
+      <div class="phon-section" style="padding-top:0">
+        <div class="phon-title">Pronunciación — العربية</div>
+        <div class="phon-block">
+          <div class="phon-sil-row">${l.ar.silabas.map(s=>`<span class="sil-pill ar">${s}</span>`).join('')}</div>
+          ${l.ar.notas.map(n=>`<div class="phon-note">${n}</div>`).join('')}
+        </div>
+      </div>
+      <div class="conn-section">
+        <div class="conn-title">Conexiones fonéticas & etimológicas</div>
+        ${l.conexiones.map(c=>`<div class="conn-card ${typeMap[c.tipo]||'tipo-gen'}"><div class="conn-tipo">${c.tipo}</div><div class="conn-text">${c.texto}</div></div>`).join('')}
+        <div class="conn-card conn-memoria"><div class="conn-tipo">truco mnemotécnico</div><div class="conn-text">${l.memoria}</div></div>
+      </div>
+    </div>`;
+}
+
+// ── PROGRESS ──────────────────────────────────────────
+function renderProgreso(){
+  const st=getState();
+  document.getElementById('p-streak').textContent=st.streak;
+  document.getElementById('p-total').textContent=st.totalDays;
+  document.getElementById('p-words').textContent=st.wordsFr+st.wordsAr;
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const today=new Date();
+  for(let i=27;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=d.toISOString().split('T')[0];
+    const h=st.history[k]||{};const done=['m','t','n'].filter(p=>h[p]).length;
+    const el=document.createElement('div');
+    el.style.cssText=`aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;border:0.5px solid;font-weight:500;`;
+    if(done===3)el.style.cssText+=`background:rgba(126,200,164,.18);border-color:var(--ar);color:var(--ar)`;
+    else if(done>0)el.style.cssText+=`background:rgba(201,169,110,.1);border-color:var(--fr);color:var(--fr)`;
+    else el.style.cssText+=`border-color:var(--border);color:var(--text3)`;
+    el.textContent=done||'';grid.appendChild(el);
+  }
+  const achievements=[
+    {label:'Primer día',desc:'Completa tu primer día',ok:st.totalDays>=1,icon:'☀'},
+    {label:'Primera semana',desc:'7 días completados',ok:st.totalDays>=7,icon:'🌙'},
+    {label:'Racha de 7',desc:'7 días seguidos',ok:st.streak>=7,icon:'⚡'},
+    {label:'20 palabras',desc:'Aprende 20 palabras',ok:st.wordsFr>=20,icon:'📖'},
+    {label:'Políglota',desc:'Completa las 4 semanas',ok:st.totalDays>=28,icon:'★'},
+  ];
+  document.getElementById('logros-list').innerHTML=achievements.map(a=>`
+    <div class="logro-card" style="opacity:${a.ok?1:0.3}">
+      <div class="logro-icon" style="background:${a.ok?'rgba(201,169,110,.15)':'var(--bg3)'};border:0.5px solid ${a.ok?'var(--fr)':'var(--border)'}">${a.icon}</div>
+      <div><div style="font-size:14px;font-weight:500">${a.label}</div><div style="font-size:12px;color:var(--text3)">${a.desc}</div></div>
+    </div>`).join('');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────
+async function setupNotifications(){
+  if(!('Notification' in window)){toast('Sin soporte de notificaciones');return;}
+  const p=await Notification.requestPermission();
+  if(p!=='granted'){toast('Notificaciones bloqueadas');return;}
+  const st=getState();
+  st.notifTimes={m:document.getElementById('time-m').value,t:document.getElementById('time-t').value,n:document.getElementById('time-n').value};
+  saveState(st);scheduleNotifications(st.notifTimes);toast('Notificaciones activadas ✓');
+}
+function scheduleNotifications(times){
+  if(!('serviceWorker' in navigator))return;
+  const msgs={m:{title:'Lumière · نور',body:'Buenos días. Tu palabra del día te espera ☀️'},t:{title:'Lumière · نور',body:'Pausa de 5 min: micro-inmersión auditiva 🎧'},n:{title:'Lumière · نور',body:'Antes de dormir: una oración en francés 🌙'}};
+  Object.entries(times).forEach(([k,time])=>{
+    const[h,m]=time.split(':').map(Number);
+    const now=new Date();const target=new Date();target.setHours(h,m,0,0);
+    if(target<=now)target.setDate(target.getDate()+1);
+    setTimeout(()=>{
+      if(Notification.permission==='granted')new Notification(msgs[k].title,{body:msgs[k].body,icon:'/icons/icon-192.png',vibrate:[200,100,200]});
+      setInterval(()=>{if(Notification.permission==='granted')new Notification(msgs[k].title,{body:msgs[k].body,icon:'/icons/icon-192.png'});},86400000);
+    },target-now);
+  });
+}
+
+// ── SW + INSTALL ───────────────────────────────────────
+function registerSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').then(()=>{
+      const st=getState();if(st.notifTimes&&Notification.permission==='granted')scheduleNotifications(st.notifTimes);
+    });
+  }
+}
+let deferredPrompt;
+function setupInstallPrompt(){
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').classList.add('visible');});
+  document.getElementById('install-btn').addEventListener('click',async()=>{
+    if(!deferredPrompt)return;deferredPrompt.prompt();
+    const{outcome}=await deferredPrompt.userChoice;
+    if(outcome==='accepted'){document.getElementById('install-banner').classList.remove('visible');toast('Instalada en tu pantalla ✓');}
+    deferredPrompt=null;
+  });
+  window.addEventListener('appinstalled',()=>document.getElementById('install-banner').classList.remove('visible'));
+}
+
+// ── UTILS ──────────────────────────────────────────────
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+function resetAll(){if(confirm('¿Borrar todo el progreso?')){localStorage.removeItem('lm_state');location.reload();}}
+</script>
+</body>
+</html>
