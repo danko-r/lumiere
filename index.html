@@ -637,12 +637,18 @@ function scheduleNotifications(times){
 }
 
 // ── SW + INSTALL ───────────────────────────────────────
-function registerSW(){
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').then(()=>{
-      const st=getState();if(st.notifTimes&&Notification.permission==='granted')scheduleNotifications(st.notifTimes);
-    });
-  }
+function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+
+  navigator.serviceWorker.register('/lumiere/sw.js', { scope: '/lumiere/' })
+    .then(reg => {
+      console.log('[SW] registrado, scope:', reg.scope);
+      const st = getState();
+      if (st.notifTimes && Notification.permission === 'granted') {
+        scheduleNotifications(st.notifTimes);
+      }
+    })
+    .catch(err => console.error('[SW] error al registrar:', err));
 }
 let deferredPrompt;
 function setupInstallPrompt(){
